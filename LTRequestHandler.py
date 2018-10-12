@@ -8,7 +8,7 @@ def extractId(request):
     if m:
         idField = m.group()
         req = copy(request).replace(idField, '')
-        reqid = int(idField.split("=")[1])
+        reqid = idField.split("=")[1]
         return req, reqid
     return None
 
