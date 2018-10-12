@@ -1,0 +1,116 @@
+import time
+import json
+import urllib.request
+from http.server import HTTPServer
+from LTRequestHandler import LTRequestHandler
+from threading import Thread, current_thread
+from time import sleep
+from queue import Queue
+from pprint import pprint
+import ssl
+from os.path import isfile
+from configparser import ConfigParser
+import sys
+
+
+if not isfile("server.conf"):
+    raise FileNotFoundError("Provide configuration file 'server.conf'")
+
+
+config = ConfigParser()
+config.read('server.conf')
+
+
+NUM_WORKERS = int(config['SETTINGS']['NUM_WORKERS'])
+MIDDLE_SERVER_HOST = config['SETTINGS']['MIDDLE_SERVER_HOST']
+MIDDLE_SERVER_PORT = int(config['SETTINGS']['MIDDLE_SERVER_PORT'])
+LT_ADDR = config['SETTINGS']['LT_ADDR']
+LT_PORT = int(config['SETTINGS']['LT_PORT'])
+RESPONSE_URL = config['SETTINGS']['RESPONSE_URL']
+
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+
+def lt(worker_name, reqid, requestLink):
+    """
+    :param requestLink: fully formed LT request link
+    :return: the result of LT check
+    """
+    print(time.asctime(), "Sending request to LT for reqid {} from worker {}".format(reqid, worker_name))
+    url_addr = requestLink
+    data = None
+    with urllib.request.urlopen(url_addr) as url:
+        data = json.loads(url.read().decode())
+    print(time.asctime(), "Received responce from LT for reqid {} from worker {}".format(reqid, worker_name))
+
+    return data
+
+
+def postLTCheck(worker_name, reqid, checkResult):
+    print(time.asctime(), "Sending response for reqid {} from worker {}".format(reqid, worker_name))
+    url_addr = RESPONSE_URL
+    enc_json = json.dumps(checkResult).encode('utf-8')
+    req = urllib.request.Request(url_addr, data=enc_json,
+                                 headers={'content-type': 'application/json'})
+    response = urllib.request.urlopen(req)
+    print(time.asctime(), "Sent response for reqid {} from worker {}: ".format(reqid, worker_name), response.read())
+
+
+def strip_answ(answ):
+    stripped = {'matches':[]}
+    for match in answ['matches']:
+        m = {field: match[field] for field in ['message', 'offset', 'length', 'replacements']}
+        m['rule'] = {'id': match['rule']['id']}
+
+        stripped['matches'].append(m)
+
+    return stripped
+
+
+def do_work(request, worker_name):
+    """
+    :param request: request string passed by the client
+    :return: Nothing
+    Substitute the address for LT, get the check result and post it back to client
+    """
+    req, reqid = request
+    reqLink = "http://{}:{}{}".format(LT_ADDR, LT_PORT, req)
+    answ = lt(worker_name, reqid, reqLink)
+    stripped = strip_answ(answ)
+    stripped['reqid'] = reqid
+    # pprint(stripped)
+    postLTCheck(worker_name, reqid, stripped)
+
+
+def worker(queue):
+    worker_name = current_thread().name
+    while True: 
+        req = queue.get()
+        try:
+            do_work(req, worker_name)
+        except Exception as e: 
+            print("Exception while processing: ", req)
+            print(e)
+        queue.task_done()
+        sleep(1)
+
+if __name__ == '__main__':
+    qObj = Queue()
+
+    for i in range(NUM_WORKERS):
+        t = Thread(target=worker, args=(qObj,))
+        t.daemon = True
+        t.start()
+
+    server_class = HTTPServer
+    httpd = server_class((MIDDLE_SERVER_HOST, MIDDLE_SERVER_PORT), LTRequestHandler(qObj))
+    print(time.asctime(), 'Server Starts - %s:%s' % (MIDDLE_SERVER_HOST, MIDDLE_SERVER_PORT))
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+
+    qObj.join()
+    httpd.server_close()
+    print(time.asctime(), 'Server Stops - %s:%s' % (MIDDLE_SERVER_HOST, MIDDLE_SERVER_PORT))
