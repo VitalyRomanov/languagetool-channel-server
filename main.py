@@ -10,7 +10,7 @@ from pprint import pprint
 import ssl
 from os.path import isfile
 from configparser import ConfigParser
-import sys
+# import sys
 
 
 if not isfile("server.conf"):
@@ -20,13 +20,20 @@ if not isfile("server.conf"):
 config = ConfigParser()
 config.read('server.conf')
 
-
+print("\nReading configs...")
 NUM_WORKERS = int(config['SETTINGS']['NUM_WORKERS'])
 MIDDLE_SERVER_HOST = config['SETTINGS']['MIDDLE_SERVER_HOST']
 MIDDLE_SERVER_PORT = int(config['SETTINGS']['MIDDLE_SERVER_PORT'])
 LT_ADDR = config['SETTINGS']['LT_ADDR']
 LT_PORT = int(config['SETTINGS']['LT_PORT'])
 RESPONSE_URL = config['SETTINGS']['RESPONSE_URL']
+print("NUM_WORKERS: ", NUM_WORKERS)
+print("MIDDLE_SERVER_HOST: ", MIDDLE_SERVER_HOST)
+print("MIDDLE_SERVER_PORT: ", MIDDLE_SERVER_PORT)
+print("LT_ADDR: ", LT_ADDR)
+print("LT_PORT: ", LT_PORT)
+print("RESPONSE_URL: ", RESPONSE_URL)
+print("\n\n")
 
 
 ssl._create_default_https_context = ssl._create_unverified_context
