@@ -115,7 +115,7 @@ def do_work(request, worker_name):
     req, reqid = request
 
     if type(req) is dict:
-        reqLink = "http://{}:{}/v2/check".format(LT_ADDR, LT_PORT)
+        reqLink = "http://{}:{}/v2/check?".format(LT_ADDR, LT_PORT)
         reqData = req
     elif type(req) is str:
         reqLink = "http://{}:{}{}".format(LT_ADDR, LT_PORT, req)
