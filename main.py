@@ -72,7 +72,7 @@ def lt(worker_name, reqid, requestLink, reqData):
                 req.body,
             ))
 
-        pretty_print_POST(prepared)
+        pretty_print_POST(req)
     else:
         req = requestLink
 
