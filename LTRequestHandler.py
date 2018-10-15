@@ -66,7 +66,7 @@ def LTRequestHandler(queue):
             if not body:
                 raise ValueError("No data received")
 
-            request = body.split("/")
+            request = body.decode('utf-8').split("/")
 
             print("Received request: ", body)
 
