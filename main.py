@@ -1,6 +1,7 @@
 import time
 import json
 import urllib.request
+import requests
 from http.server import HTTPServer
 from LTRequestHandler import LTRequestHandler
 from threading import Thread, current_thread
@@ -45,41 +46,13 @@ def lt(worker_name, reqid, requestLink, reqData):
     :return: the result of LT check
     """
     print(time.asctime(), "Sending request to LT for reqid {} from worker {}".format(reqid, worker_name))
-    # url_addr = requestLink
-    # data = None
-    # with urllib.request.urlopen(url_addr) as url:
-    #     data = json.loads(url.read().decode())
 
-    if True:#reqData:
-        url_addr = requestLink
-        enc_json = json.dumps(reqData).encode('utf-8')
-        # print(enc_json)
-        req = urllib.request.Request(url_addr, data=enc_json)#, headers={'content-type': 'application/json'})
-
-        # def pretty_print_POST(req):
-        #     """
-        #     At this point it is completely built and ready
-        #     to be fired; it is "prepared".
-        #
-        #     However pay attention at the formatting used in
-        #     this function because it is programmed to be pretty
-        #     printed and may differ from the actual request.
-        #     """
-        #     print('{}\n{}\n{}\n\n{}'.format(
-        #         '-----------START-----------',
-        #         req.method + ' ' + req.url,
-        #         '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
-        #         req.body,
-        #     ))
-        #
-        # pretty_print_POST(req.prepare())
+    if reqData:
+        req = requests.post(requestLink, data=reqData)
     else:
-        req = requestLink
+        req = requests.get(requestLink)
 
-    data = None
-    with urllib.request.urlopen(req) as url:
-        data = json.loads(url.read().decode())
-
+    data = json.loads(req.text)
     print(time.asctime(), "Received responce from LT for reqid {} from worker {}".format(reqid, worker_name))
 
     return data

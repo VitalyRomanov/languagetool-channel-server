@@ -67,8 +67,6 @@ def LTRequestHandler(queue):
             request = self.path.split("/")
             body = self._read_body()
 
-            print(request, body)
-
             if len(request) > 1 and request[1] == 'v2':
 
                 if body:
@@ -77,7 +75,7 @@ def LTRequestHandler(queue):
                     if 'reqid' in reqBody:
                         valid = True
                         req_reqid = {field: reqBody[field][0] for field in ['language', 'text']}, reqBody['reqid'][0]
-                        print("Received request: ", reqBody)
+                        # print("Received request: ", reqBody[1:min(20,len(reqBody))])
                     else:
                         print("No reqid provided: ", reqBody)
             else:
