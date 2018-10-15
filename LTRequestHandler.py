@@ -2,6 +2,8 @@ from http.server import BaseHTTPRequestHandler
 import re
 from copy import copy
 
+from urllib.parse import urlparse, parse_qs, quote
+
 
 def extractId(request):
     m = re.search('reqid=[0-9]{1,}', request)
@@ -59,29 +61,32 @@ def LTRequestHandler(queue):
 
 
         def do_POST(self):
-            # request = self.path.split("/")
+            valid = False
+            req_reqid = None
 
+            request = self.path.split("/")
             body = self._read_body()
 
-            if not body:
-                raise ValueError("No data received")
+            print(request, body)
 
-            request = body.decode('utf-8').split("/")
+            if len(request) > 1 and request[1] != 'v2':
 
-            print("Received request: ", body)
+                if body:
+                    reqBody = parse_qs(quote(body, safe='/:?=&'))
 
-            req_reqid = extractId(self.path)
-
-            # Check whether the requies is compliant with LT
-            valid = False
-            if len(request) == 3:
-                if request[1] == 'v2' and req_reqid is not None:
-                    valid = True
+                    if 'reqid' in reqBody:
+                        valid = True
+                        req_reqid = {field: reqBody[field][0] for field in ['language', 'text']}, reqBody['reqid'][0]
+                        print("Received request: ", request_body)
+                    else:
+                        print("No reqid provided: ", request_body)
+            else:
+                valid = False
+                print("Incorrect request path: ", request)
 
             if valid:
                 self.respond({'status': 200}, 'OK')
                 queue.put(req_reqid)
-                # queue.put("http://{}:{}{}".format(LT_ADDR, LT_PORT, self.path))
             else:
                 self.respond({'status': 500}, 'Check resquest format')
 

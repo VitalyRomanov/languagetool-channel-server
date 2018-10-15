@@ -39,16 +39,29 @@ print("\n\n")
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-def lt(worker_name, reqid, requestLink):
+def lt(worker_name, reqid, requestLink, reqData):
     """
     :param requestLink: fully formed LT request link
     :return: the result of LT check
     """
     print(time.asctime(), "Sending request to LT for reqid {} from worker {}".format(reqid, worker_name))
-    url_addr = requestLink
+    # url_addr = requestLink
+    # data = None
+    # with urllib.request.urlopen(url_addr) as url:
+    #     data = json.loads(url.read().decode())
+
+    if reqData:
+        url_addr = requestLink
+        enc_json = json.dumps(reqData).encode('utf-8')
+
+        req = urllib.request.Request(url_addr, data=enc_json, headers={'content-type': 'application/json'})
+    else:
+        req = requestLink
+
     data = None
-    with urllib.request.urlopen(url_addr) as url:
+    with urllib.request.urlopen(req) as url:
         data = json.loads(url.read().decode())
+        
     print(time.asctime(), "Received responce from LT for reqid {} from worker {}".format(reqid, worker_name))
 
     return data
@@ -82,8 +95,15 @@ def do_work(request, worker_name):
     Substitute the address for LT, get the check result and post it back to client
     """
     req, reqid = request
-    reqLink = "http://{}:{}{}".format(LT_ADDR, LT_PORT, req)
-    answ = lt(worker_name, reqid, reqLink)
+
+    if type(req) is dict:
+        reqLink = "http://{}:{}/v2/check".format(LT_ADDR, LT_PORT)
+        reqData = req
+    elif type(req) is str:
+        reqLink = "http://{}:{}{}".format(LT_ADDR, LT_PORT, req)
+        reqData = None
+
+    answ = lt(worker_name, reqid, reqLink, reqData)
     stripped = strip_answ(answ)
     stripped['reqid'] = reqid
     # pprint(stripped)
@@ -92,11 +112,11 @@ def do_work(request, worker_name):
 
 def worker(queue):
     worker_name = current_thread().name
-    while True: 
+    while True:
         req = queue.get()
         try:
             do_work(req, worker_name)
-        except Exception as e: 
+        except Exception as e:
             print("Exception while processing: ", req)
             print(e)
         queue.task_done()
