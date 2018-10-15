@@ -68,6 +68,8 @@ def LTRequestHandler(queue):
 
             request = path.split("/")
 
+            print("Received request: ", body)
+
             req_reqid = extractId(self.path)
 
             # Check whether the requies is compliant with LT
