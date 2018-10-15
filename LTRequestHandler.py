@@ -77,9 +77,9 @@ def LTRequestHandler(queue):
                     if 'reqid' in reqBody:
                         valid = True
                         req_reqid = {field: reqBody[field][0] for field in ['language', 'text']}, reqBody['reqid'][0]
-                        print("Received request: ", request_body)
+                        print("Received request: ", reqBody)
                     else:
-                        print("No reqid provided: ", request_body)
+                        print("No reqid provided: ", reqBody)
             else:
                 valid = False
                 print("Incorrect request path: ", request)
