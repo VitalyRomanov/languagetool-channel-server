@@ -53,7 +53,7 @@ def lt(worker_name, reqid, requestLink, reqData):
     if reqData:
         url_addr = requestLink
         enc_json = json.dumps(reqData).encode('utf-8')
-
+        print(enc_json)
         req = urllib.request.Request(url_addr, data=enc_json, headers={'content-type': 'application/json'})
     else:
         req = requestLink
@@ -61,7 +61,7 @@ def lt(worker_name, reqid, requestLink, reqData):
     data = None
     with urllib.request.urlopen(req) as url:
         data = json.loads(url.read().decode())
-        
+
     print(time.asctime(), "Received responce from LT for reqid {} from worker {}".format(reqid, worker_name))
 
     return data
