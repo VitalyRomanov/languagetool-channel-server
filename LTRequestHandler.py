@@ -51,8 +51,22 @@ def LTRequestHandler(queue):
                 self.respond({'status': 500}, 'Check resquest format')
 
 
+        def _read_body(self):
+            if 'content-length' in self.headers:
+                length = int(self.headers['content-length'])
+                return self.rfile.read(length) if length > 0 else None
+            return None
+
+
         def do_POST(self):
-            request = self.path.split("/")
+            # request = self.path.split("/")
+
+            body = self._read_body()
+
+            if not body:
+                raise ValueError("No data received")
+
+            request = path.split("/")
 
             req_reqid = extractId(self.path)
 
