@@ -69,7 +69,7 @@ def LTRequestHandler(queue):
 
             print(request, body)
 
-            if len(request) > 1 and request[1] != 'v2':
+            if len(request) > 1 and request[1] == 'v2':
 
                 if body:
                     reqBody = parse_qs(quote(body, safe='/:?=&'))
