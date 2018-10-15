@@ -53,8 +53,26 @@ def lt(worker_name, reqid, requestLink, reqData):
     if reqData:
         url_addr = requestLink
         enc_json = json.dumps(reqData).encode('utf-8')
-        print(enc_json)
-        req = urllib.request.Request(url_addr, data=enc_json, headers={'content-type': 'application/json'})
+        # print(enc_json)
+        req = urllib.request.Request(url_addr, data=enc_json)#, headers={'content-type': 'application/json'})
+
+        def pretty_print_POST(req):
+            """
+            At this point it is completely built and ready
+            to be fired; it is "prepared".
+
+            However pay attention at the formatting used in
+            this function because it is programmed to be pretty
+            printed and may differ from the actual request.
+            """
+            print('{}\n{}\n{}\n\n{}'.format(
+                '-----------START-----------',
+                req.method + ' ' + req.url,
+                '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+                req.body,
+            ))
+
+        pretty_print_POST(prepared)
     else:
         req = requestLink
 
