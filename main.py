@@ -54,7 +54,7 @@ def lt(worker_name, reqid, requestLink, reqData):
 
     data = json.loads(req.text)
     print(time.asctime(), "Received responce from LT for reqid {} from worker {}".format(reqid, worker_name))
-
+    # http://docs.python-requests.org/en/latest/user/quickstart/#response-content
     return data
 
 
