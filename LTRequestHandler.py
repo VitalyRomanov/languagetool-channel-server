@@ -70,7 +70,7 @@ def LTRequestHandler(queue):
             if len(request) > 1 and request[1] == 'v2':
 
                 if body:
-                    reqBody = parse_qs(quote(body, safe='%/:?=&'))
+                    reqBody = parse_qs(quote(body, safe='%/:?=&+'))
 
                     if 'reqid' in reqBody:
                         valid = True
