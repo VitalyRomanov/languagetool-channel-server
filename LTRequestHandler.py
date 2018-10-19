@@ -50,7 +50,7 @@ def LTRequestHandler(queue):
                 queue.put(req_reqid)
                 # queue.put("http://{}:{}{}".format(LT_ADDR, LT_PORT, self.path))
             else:
-                self.respond({'status': 500}, 'Check resquest format')
+                self.respond({'status': 500}, 'Check resquest format: {}'.format(self.path))
 
 
         def _read_body(self):
@@ -67,33 +67,40 @@ def LTRequestHandler(queue):
             request = self.path.split("/")
             body = self._read_body()
 
+            err_message = ""
+
             if len(request) > 1 and request[1] == 'v2':
 
                 if body:
                     reqBody = parse_qs(quote(body, safe='%/:?=&+'))
 
-                    if 'reqid' in reqBody:
+                    if 'reqid' in reqBody and 'language' in reqBody and 'text' in reqBody:
                         valid = True
                         req_reqid = {field: reqBody[field][0] for field in ['language', 'text']}, reqBody['reqid'][0]
                         # print("Received request: ", reqBody[1:min(20,len(reqBody))])
                     else:
-                        print("No reqid provided: ", reqBody)
+                        err_message = "the field \'reqid\', \'text\' or \'language\' is missing"
+                        print("\nRequired parameters missing: {}\n".format(body))
             else:
                 valid = False
-                print("Incorrect request path: ", request)
+                err_message = "path provided: {}, but should be: /v2/check".format(self.path)
+                print("\nIncorrect request path: {} {}\n".format(self.path, body))
 
             if valid:
                 self.respond({'status': 200}, 'OK')
                 queue.put(req_reqid)
             else:
-                self.respond({'status': 500}, 'Check resquest format')
+                self.respond({'status': 500}, 'Check resquest format: {}'.format(err_message))
+                # print("\nInvalid request format")
+                # print(self.path)
+                # print(body)
 
 
         def handle_http(self, status_code, path, message):
             self.send_response(status_code)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
-            m = message if status_code==200 else "{}: {}".format(message, path)
+            m = message if status_code==200 else "{}".format(message)
             content = '''
             {}
             '''.format(m)
